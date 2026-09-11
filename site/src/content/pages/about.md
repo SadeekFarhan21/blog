@@ -3,7 +3,7 @@ title: "About"
 description: "A bit about me and this blog."
 ---
 
-Deep Dive is Farhan's home for long-form writing about machine learning,
+Blog is Farhan's home for long-form writing about machine learning,
 artificial intelligence, software engineering, and research.
 
 The goal is simple: go beyond surface-level summaries, work through the ideas,

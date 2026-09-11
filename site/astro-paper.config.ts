@@ -2,8 +2,8 @@ import { defineAstroPaperConfig } from "./src/types/config";
 
 export default defineAstroPaperConfig({
   site: {
-    url: "https://sadeekfarhan21.github.io/deep-dive/",
-    title: "Deep Dive",
+    url: "https://sadeekfarhan21.github.io/blog/",
+    title: "Blog",
     description: "Deep dives into machine learning, AI, software, and research.",
     author: "Farhan",
     profile: "https://github.com/SadeekFarhan21",
@@ -24,7 +24,7 @@ export default defineAstroPaperConfig({
     showBackButton: true,
     editPost: {
       enabled: true,
-      url: "https://github.com/SadeekFarhan21/deep-dive/edit/main/",
+      url: "https://github.com/SadeekFarhan21/blog/edit/main/",
     },
     search: "pagefind",
   },
