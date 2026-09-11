@@ -1,0 +1,22 @@
+# Dependencies and generated output
+node_modules/
+dist/
+.astro/
+.pnpm-store/
+
+# Local development files
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+.idea/
+.vscode/
+
+# Project-only tooling and documentation
+.github/
+compose.yaml
+compose.override.yaml
+Dockerfile
+CHANGELOG.md
+AstroPaper-lighthouse-score.svg
