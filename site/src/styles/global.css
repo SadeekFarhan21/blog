@@ -4,6 +4,10 @@
 @import "rehype-callouts/theme/obsidian";
 
 @layer base {
+  html {
+    zoom: 0.85;
+  }
+
   * {
     @apply border-border outline-accent/75;
     scrollbar-width: auto;
