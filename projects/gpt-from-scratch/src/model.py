@@ -68,12 +68,28 @@ class GPT(nn.Module):
 
         return logits
 
+    @torch.no_grad()
+    def generate(self, tokens: torch.Tensor, max_new_tokens: int) -> torch.Tensor:
+        for _ in range(max_new_tokens):
+            context = tokens[:, -self.block_size:]
+            ## get the logits for the last position
+            logits = self.forward(context)
+            ## get the last position logits
+            logits = logits[:, -1, :]
+            ## sample the next token
+            probs = F.softmax(logits, dim=-1)
+            ## sample the next token
+            next_token = torch.multinomial(probs, num_samples=1)
+            ## append the next token to the tokens
+            tokens = torch.cat((tokens, next_token), dim=1)
+        return tokens
 
     def generate_text(self, prompt: str, max_new_tokens: int) -> str:
         if self.tokenizer is None:
             raise ValueError("a tokenizer is required to generate text")
-        tokens = self.tokenizer.encode(prompt).ids
-        tokens = torch.tensor(tokens).unsqueeze(0)
-        return self.tokenizer.decode(self.generate(tokens, max_new_tokens)[0].tolist())
+        token_ids = self.tokenizer.encode(prompt).ids
+        tokens = torch.tensor(token_ids, dtype=torch.long).unsqueeze(0)
+        generated = self.generate(tokens, max_new_tokens)
+        return self.tokenizer.decode(generated[0].tolist())
 
     ## At this point we have a model that is bigram model which means that the model predicts the next token based on only the previous token, but we want to take it to the next level and make it a transformer model.
