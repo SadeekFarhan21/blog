@@ -44,7 +44,7 @@
     }
 
     img {
-      @apply border-border mx-auto border;
+      @apply border-border mx-auto h-auto w-full border;
     }
 
     img[role="button"] {
@@ -112,9 +112,15 @@
 
   /* ===== Code Blocks & Syntax Highlighting ===== */
   .astro-code {
-    @apply outline-border flex border bg-(--shiki-light-bg) text-(--shiki-light) [&_span]:text-(--shiki-light);
-  }
+    @apply flex border-0 outline-none;
+    background-color: #0d1117 !important;
+    border: 0 !important;
+    color: #e6edf3;
 
+    code {
+      color: inherit;
+    }
+  }
 
   /* Styles for Shiki transformers */
   /* https://shiki.style/packages/transformers */
