@@ -6,6 +6,7 @@ import { resolveDefaultOgImagePath } from "@/utils/resolveDefaultOgImagePath";
 import { getAssetPath } from "@/utils/withBase";
 import config from "@/config";
 import "@/styles/global.css";
+import SpeedInsights from "@vercel/speed-insights/astro";
 
 type Props = {
   title?: string;
@@ -93,6 +94,8 @@ const rssHref = getRelativeLocaleUrl(
         />
       )
     }
+
+    <SpeedInsights />
 
     <ClientRouter />
   </head>
