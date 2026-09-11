@@ -1,6 +1,6 @@
 import pytest
 
-from gpt_from_scratch import CharacterTokenizer
+from tokenizer import CharacterTokenizer
 
 
 def test_character_tokenizer_round_trip() -> None:
@@ -16,4 +16,3 @@ def test_character_tokenizer_rejects_unknown_character() -> None:
 
     with pytest.raises(ValueError, match="not in the vocabulary"):
         tokenizer.encode("abcd")
-

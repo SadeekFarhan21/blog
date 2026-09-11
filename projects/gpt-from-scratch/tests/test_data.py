@@ -1,7 +1,7 @@
 import torch
 import pytest
 
-from gpt_from_scratch import LanguageModelDataset
+from data import LanguageModelDataset
 
 
 def test_batch_targets_are_inputs_shifted_by_one_token() -> None:
