@@ -93,3 +93,5 @@ class GPT(nn.Module):
         return self.tokenizer.decode(generated[0].tolist())
 
     ## At this point we have a model that is bigram model which means that the model predicts the next token based on only the previous token, but we want to take it to the next level and make it a transformer model.
+
+    

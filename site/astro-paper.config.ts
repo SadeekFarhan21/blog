@@ -3,7 +3,7 @@ import { defineAstroPaperConfig } from "./src/types/config";
 export default defineAstroPaperConfig({
   site: {
     url: "https://sadeekfarhan21.github.io/blog/",
-    title: "Blog",
+    title: "Farhan's Blog",
     description: "Deep dives into machine learning, AI, software, and research.",
     author: "Farhan",
     profile: "https://github.com/SadeekFarhan21",
@@ -22,10 +22,7 @@ export default defineAstroPaperConfig({
     dynamicOgImage: true,
     showArchives: true,
     showBackButton: true,
-    editPost: {
-      enabled: true,
-      url: "https://github.com/SadeekFarhan21/blog/edit/main/",
-    },
+    editPost: { enabled: false },
     search: "pagefind",
   },
   socials: [
