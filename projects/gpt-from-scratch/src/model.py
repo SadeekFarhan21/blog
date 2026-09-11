@@ -45,6 +45,7 @@ class GPT(nn.Module):
         self.position_embedding = nn.Embedding(block_size, n_embed)
         self.tokenizer = tokenizer
         self.attention = SelfAttention(head_size=n_embed, n_embed=n_embed, block_size=block_size, dropout=0.0)
+        self.lm_head = nn.Linear(n_embed, vocab_size)
 
     def forward(self, tokens: torch.Tensor, targets: torch.Tensor | None = None) -> torch.Tensor:
         batch_size, sequence_length = tokens.shape
@@ -57,7 +58,15 @@ class GPT(nn.Module):
         x = token + position
         ## Unmasked self-attention
         x = self.attention(x)
-        return x
+        logits = self.lm_head(x)
+
+        if targets is not None:
+            # Each position predicts the token at the corresponding position
+            # in targets (the dataset has already shifted targets by one).
+            loss = F.cross_entropy(logits.reshape(-1, logits.size(-1)), targets.reshape(-1))
+            return loss
+
+        return logits
 
 
     def generate_text(self, prompt: str, max_new_tokens: int) -> str:
