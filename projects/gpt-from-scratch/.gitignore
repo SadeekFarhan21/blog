@@ -10,3 +10,8 @@ build/
 trash/*
 !trash/.gitkeep
 .DS_Store
+*.parquet
+data/tinystories.txt
+*.tokens.uint16
+checkpoints/
+*.pt
