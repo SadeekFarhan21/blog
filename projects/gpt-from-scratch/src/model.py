@@ -53,6 +53,20 @@ class MultiHeadAttention(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.proj(torch.cat([head(x) for head in self.heads], dim=-1))
 
+## feed forward network of the transformer model
+class FeedForward(nn.Module):
+    def __init__(self, n_embed: int, dropout: float = 0.0) -> None:
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(n_embed, 4 * n_embed),
+            nn.ReLU(),
+            nn.Linear(4 * n_embed, n_embed),
+        )
+        self.dropout = nn.Dropout(dropout)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.dropout(self.net(x))
+
 class GPT(nn.Module):
     def __init__(self, vocab_size: int, block_size: int, n_embed: int, tokenizer: Tokenizer | None = None) -> None:
         super().__init__()
