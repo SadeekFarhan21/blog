@@ -26,6 +26,10 @@ def main() -> None:
     parser.add_argument("--learning-rate", type=float, default=3e-4)
     parser.add_argument("--output", type=Path, default=project_dir / "checkpoints" / "gpt-tinystories.pt")
     parser.add_argument("--seed", type=int, default=1337)
+    parser.add_argument("--wandb", action="store_true", help="log metrics to Weights & Biases")
+    parser.add_argument("--wandb-project", default="gpt-from-scratch")
+    parser.add_argument("--wandb-run-name", default=None)
+    parser.add_argument("--wandb-entity", default=None)
     args = parser.parse_args()
 
     if args.steps <= 0:
@@ -63,8 +67,20 @@ def main() -> None:
         n_layers=args.layers,
         tokenizer=tokenizer,
     )
-    print(f"data={args.data.name} parameters={sum(p.numel() for p in model.parameters()):,}")
+    num_parameters = sum(p.numel() for p in model.parameters())
+    print(f"data={args.data.name} parameters={num_parameters:,}")
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate)
+
+    run = None
+    if args.wandb:
+        import wandb
+
+        run = wandb.init(
+            project=args.wandb_project,
+            entity=args.wandb_entity,
+            name=args.wandb_run_name,
+            config={**vars(args), "parameters": num_parameters},
+        )
 
     for step in range(args.steps):
         inputs, targets = dataset.get_batch("train", args.batch_size, args.block_size)
@@ -74,8 +90,13 @@ def main() -> None:
         optimizer.step()
         if step == 0 or (step + 1) % args.log_every == 0:
             print(f"step {step + 1}/{args.steps}: loss = {loss.item():.4f}")
+            if run is not None:
+                run.log({"train/loss": loss.item()}, step=step + 1)
 
-    print(model.generate_text("To be", 50))
+    sample = model.generate_text("To be", 50)
+    print(sample)
+    if run is not None:
+        run.log({"sample": sample})
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     torch.save({
@@ -93,6 +114,10 @@ def main() -> None:
         "tokenizer": str((project_dir / "data" / "tokenizer.json").resolve()),
     }, args.output)
     print(f"saved checkpoint={args.output} size={args.output.stat().st_size:,} bytes")
+
+    if run is not None:
+        run.summary["final_loss"] = loss.item()
+        run.finish()
 
 
 if __name__ == "__main__":
