@@ -126,13 +126,28 @@ class GPT(nn.Module):
         return logits
 
     @torch.no_grad()
-    def generate(self, tokens: torch.Tensor, max_new_tokens: int) -> torch.Tensor:
+    def generate(
+        self,
+        tokens: torch.Tensor,
+        max_new_tokens: int,
+        *,
+        temperature: float = 1.0,
+        top_k: int | None = None,
+    ) -> torch.Tensor:
+        if temperature <= 0:
+            raise ValueError("temperature must be positive")
         for _ in range(max_new_tokens):
             context = tokens[:, -self.block_size:]
             ## get the logits for the last position
             logits = self.forward(context)
             ## get the last position logits
-            logits = logits[:, -1, :]
+            logits = logits[:, -1, :] / temperature
+            if top_k is not None:
+                if top_k <= 0:
+                    raise ValueError("top_k must be positive")
+                top_k = min(top_k, logits.size(-1))
+                cutoff = torch.topk(logits, top_k).values[:, -1, None]
+                logits = logits.masked_fill(logits < cutoff, float("-inf"))
             ## sample the next token
             probs = F.softmax(logits, dim=-1)
             ## sample the next token
@@ -141,12 +156,25 @@ class GPT(nn.Module):
             tokens = torch.cat((tokens, next_token), dim=1)
         return tokens
 
-    def generate_text(self, prompt: str, max_new_tokens: int) -> str:
+    def generate_text(
+        self,
+        prompt: str,
+        max_new_tokens: int,
+        *,
+        temperature: float = 1.0,
+        top_k: int | None = None,
+    ) -> str:
         if self.tokenizer is None:
             raise ValueError("a tokenizer is required to generate text")
         token_ids = self.tokenizer.encode(prompt).ids
-        tokens = torch.tensor(token_ids, dtype=torch.long).unsqueeze(0)
-        generated = self.generate(tokens, max_new_tokens)
+        device = next(self.parameters()).device
+        tokens = torch.tensor(token_ids, dtype=torch.long, device=device).unsqueeze(0)
+        generated = self.generate(
+            tokens,
+            max_new_tokens,
+            temperature=temperature,
+            top_k=top_k,
+        )
         return self.tokenizer.decode(generated[0].tolist())
 
     ## At this point we have a model that is bigram model which means that the model predicts the next token based on only the previous token, but we want to take it to the next level and make it a transformer model.
