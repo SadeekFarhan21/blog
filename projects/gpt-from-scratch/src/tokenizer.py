@@ -1,6 +1,7 @@
 """Train a byte-level BPE tokenizer for the GPT training corpus."""
 
 from __future__ import annotations
+import argparse
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 from tokenizers import Tokenizer, decoders, models, pre_tokenizers, trainers
@@ -58,23 +59,18 @@ def train_from_iterator(
 
 
 def train_from_files(
-    files: Sequence[str | Path],
+    files: str | Path | Sequence[str | Path],
     *,
     vocab_size: int = 5_000,
     min_frequency: int = 2,
 ) -> Tokenizer:
     """Train a tokenizer from one or more UTF-8 corpus files."""
-    if not files:
-        raise ValueError("at least one training file is required")
-
-    paths = [Path(file) for file in files]
-    missing_paths = [str(path) for path in paths if not path.is_file()]
-    if missing_paths:
-        raise FileNotFoundError(f"training files not found: {', '.join(missing_paths)}")
+    if isinstance(files, (str, Path)):
+        files = [files]
 
     tokenizer = create_tokenizer()
     tokenizer.train(
-        [str(path) for path in paths],
+        [str(path) for path in files],
         trainer=create_trainer(
             vocab_size=vocab_size,
             min_frequency=min_frequency,
@@ -86,3 +82,21 @@ def train_from_files(
 def load_tokenizer(path: str | Path) -> Tokenizer:
     """Load a previously saved tokenizer.json file."""
     return Tokenizer.from_file(str(path))
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Inspect a saved tokenizer")
+    parser.add_argument("tokenizer", type=Path, help="path to tokenizer.json")
+    source = parser.add_mutually_exclusive_group(required=True)
+    source.add_argument("--file", type=Path, help="UTF-8 text file to encode")
+    source.add_argument("--text", nargs="+", help="text to encode")
+    args = parser.parse_args()
+    if args.file:
+        tokenizer = train_from_files(args.file)
+    else:
+        tokenizer = train_from_iterator([" ".join(args.text)])
+    print("Tokenizing text...")
+    print("Saving tokenizer...")
+    tokenizer.save(str(args.tokenizer))
+    print("Tokenizer saved to", args.tokenizer)
+    print("Inspecting tokenizer...")
