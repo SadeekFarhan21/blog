@@ -5,6 +5,7 @@ import { getRelativeLocaleUrl } from "astro:i18n";
 import { resolveDefaultOgImagePath } from "@/utils/resolveDefaultOgImagePath";
 import { getAssetPath } from "@/utils/withBase";
 import config from "@/config";
+import Analytics from "@vercel/analytics/astro";
 import "@/styles/global.css";
 import SpeedInsights from "@vercel/speed-insights/astro";
 
@@ -96,6 +97,7 @@ const rssHref = getRelativeLocaleUrl(
     }
 
     <SpeedInsights />
+    <Analytics />
 
     <ClientRouter />
   </head>
