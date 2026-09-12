@@ -16,6 +16,10 @@ class SelfAttention(nn.Module):
         self.value = nn.Linear(n_embed, head_size, bias=False)
         self.dropout = nn.Dropout(dropout)
 
+        ## causal mask to prevent tokens from attending to future tokens
+        self.register_buffer("mask", torch.tril(torch.ones(block_size, block_size)))
+
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         keys = self.key(x)
         queries = self.query(x)
@@ -27,7 +31,12 @@ class SelfAttention(nn.Module):
         ## scale scores for numerical stability
         scores = scores * (self.head_size ** -0.5)
 
-        ## unmasked self-attention
+        ## apply the mask
+        sequence_length = scores.shape[-1]
+        mask = self.mask[:sequence_length, :sequence_length]
+        scores = scores.masked_fill(mask == 0, float("-inf"))
+
+        ## masked self-attention
         weights = F.softmax(scores, dim=-1)
         weights = self.dropout(weights)
 
