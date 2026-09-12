@@ -70,6 +70,10 @@ class FeedForward(nn.Module):
 class Block(nn.Module):
     def __init__(self, n_embed: int, num_heads: int, block_size: int, dropout: float = 0.0) -> None:
         super().__init__()
+        if num_heads <= 0:
+            raise ValueError("num_heads must be positive")
+        if n_embed % num_heads != 0:
+            raise ValueError("n_embed must be divisible by num_heads")
         head_size = n_embed // num_heads
         self.attention = MultiHeadAttention(num_heads, head_size, n_embed, block_size, dropout)
         self.feed_forward = FeedForward(n_embed, dropout)
@@ -84,16 +88,19 @@ class Block(nn.Module):
 
 
 class GPT(nn.Module):
-    def __init__(self, vocab_size: int, block_size: int, n_embed: int, tokenizer: Tokenizer | None = None) -> None:
+    def __init__(self, vocab_size: int, block_size: int, n_embed: int, tokenizer: Tokenizer | None = None, num_heads: int = 2, n_layers: int = 1) -> None:
         super().__init__()
-        # Bigram model
-        # self.token_embedding = nn.Embedding(vocab_size, vocab_size)
-        # Transformer model
+        self.tokenizer = tokenizer
         self.block_size = block_size ## the context length of the model
         self.token_embedding = nn.Embedding(vocab_size, n_embed)
         self.position_embedding = nn.Embedding(block_size, n_embed)
-        self.tokenizer = tokenizer
-        self.attention = SelfAttention(head_size=n_embed, n_embed=n_embed, block_size=block_size, dropout=0.0)
+        self.blocks = nn.Sequential(
+            *[
+                Block(n_embed, num_heads, block_size, dropout=0.0)
+                for _ in range(n_layers)
+            ]
+        )
+        self.final_layer_norm = nn.LayerNorm(n_embed)
         self.lm_head = nn.Linear(n_embed, vocab_size)
 
     def forward(self, tokens: torch.Tensor, targets: torch.Tensor | None = None) -> torch.Tensor:
@@ -105,8 +112,9 @@ class GPT(nn.Module):
         ## Token embeddings
         token = self.token_embedding(tokens)
         x = token + position
-        ## Unmasked self-attention
-        x = self.attention(x)
+        ## Transformer blocks
+        x = self.blocks(x)
+        x = self.final_layer_norm(x)
         logits = self.lm_head(x)
 
         if targets is not None:
