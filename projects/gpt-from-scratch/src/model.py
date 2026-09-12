@@ -67,6 +67,22 @@ class FeedForward(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.dropout(self.net(x))
 
+class Block(nn.Module):
+    def __init__(self, n_embed: int, num_heads: int, block_size: int, dropout: float = 0.0) -> None:
+        super().__init__()
+        head_size = n_embed // num_heads
+        self.attention = MultiHeadAttention(num_heads, head_size, n_embed, block_size, dropout)
+        self.feed_forward = FeedForward(n_embed, dropout)
+        self.layer_norm1 = nn.LayerNorm(n_embed)
+        self.layer_norm2 = nn.LayerNorm(n_embed)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        ## residual connection around the attention and feed forward layers
+        x = x + self.attention(self.layer_norm1(x))
+        x = x + self.feed_forward(self.layer_norm2(x))
+        return x
+
+
 class GPT(nn.Module):
     def __init__(self, vocab_size: int, block_size: int, n_embed: int, tokenizer: Tokenizer | None = None) -> None:
         super().__init__()
