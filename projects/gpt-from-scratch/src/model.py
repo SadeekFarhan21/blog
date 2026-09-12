@@ -43,6 +43,16 @@ class SelfAttention(nn.Module):
         ## combine value vectors according to the attention weights
         return weights @ values
 
+## extending the self-attention to multiple heads
+class MultiHeadAttention(nn.Module):
+    def __init__(self, num_heads: int, head_size: int, n_embed: int, block_size: int, dropout: float = 0.0) -> None:
+        super().__init__()
+        self.heads = nn.ModuleList([SelfAttention(head_size, n_embed, block_size, dropout) for _ in range(num_heads)])
+        self.proj = nn.Linear(num_heads * head_size, n_embed)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.proj(torch.cat([head(x) for head in self.heads], dim=-1))
+
 class GPT(nn.Module):
     def __init__(self, vocab_size: int, block_size: int, n_embed: int, tokenizer: Tokenizer | None = None) -> None:
         super().__init__()
