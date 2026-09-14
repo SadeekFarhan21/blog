@@ -21,8 +21,6 @@ import config from "./astro-paper.config";
 
 export default defineConfig({
   site: config.site.url,
-  // This is deployed as a GitHub Pages project site, not at the domain root.
-  base: "/blog",
   integrations: [
     mdx(),
     sitemap({
